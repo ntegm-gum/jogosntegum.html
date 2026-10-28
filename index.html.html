@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrigoTech: Missão Topografia</title>
+  <style>
+    :root { --primary: #1e3a8a; --bg: #f8fafc; --card: #ffffff; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background-color: var(--bg); padding: 15px; display: flex; flex-direction: column; align-items: center; }
+    header { text-align: center; margin-bottom: 15px; }
+    h1 { color: var(--primary); font-size: 1.5rem; }
+    .card { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 15px; }
+    canvas { width: 100%; height: 220px; background: #e2e8f0; border-radius: 8px; }
+    .options { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    button { padding: 12px; border: 2px solid #cbd5e1; background: #fff; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    button:hover { border-color: var(--primary); background: #eff6ff; }
+    .feedback { margin-top: 12px; padding: 10px; border-radius: 8px; font-weight: bold; display: none; }
+    .correct { background: #dcfce7; color: #16a34a; }
+    .wrong { background: #fee2e2; color: #dc2626; }
+    .btn-next { background: var(--primary); color: #fff; border: none; margin-top: 10px; width: 100%; display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📐 TrigoTech: Missão Topografia</h1>
+  <p>SAERO H10_M - Trigonometria no Triângulo Retângulo</p>
+</header>
+
+<div class="card">
+  <canvas id="trigoCanvas" width="400" height="220"></canvas>
+</div>
+
+<div class="card">
+  <h2 id="title" style="font-size: 1.1rem; color: #1e3a8a;"></h2>
+  <p id="desc" style="margin: 10px 0; font-size: 0.95rem;"></p>
+  <div class="options" id="opts"></div>
+  <div id="fb" class="feedback"></div>
+  <button id="btnNext" class="btn-next" onclick="nextQ()">Próximo Desafio ➔</button>
+</div>
+
+<script>
+  const data = [
+    {
+      title: "Desafio 1: Altura da Torre",
+      desc: "Distância da base = 30m, Ângulo = 30°. Qual a altura (h)? (tan 30° ≈ 0,58)",
+      angle: 30, adj: "30m", opp: "h", hyp: "?", correct: "17,4m",
+      opts: ["17,4m", "30,0m", "51,7m"],
+      exp: "tan(30°) = h / 30 ➔ 0,58 * 30 = 17,4m"
+    },
+    {
+      title: "Desafio 2: Rampa de Acessibilidade",
+      desc: "Altura = 1,5m, Ângulo = 10°. Qual o comprimento (c) da rampa? (sen 10° ≈ 0,17)",
+      angle: 10, adj: "?", opp: "1,5m", hyp: "c", correct: "8,82m",
+      opts: ["8,82m", "15,0m", "10,2m"],
+      exp: "sen(10°) = 1,5 / c ➔ 1,5 / 0,17 ≈ 8,82m"
+    },
+    {
+      title: "Desafio 3: Cabo de Aço",
+      desc: "Cabo = 50m, Ângulo = 60°. Qual a distância (d) até a base? (cos 60° = 0,50)",
+      angle: 60, adj: "d", opp: "?", hyp: "50m", correct: "25,0m",
+      opts: ["25,0m", "43,3m", "30,0m"],
+      exp: "cos(60°) = d / 50 ➔ 0,50 * 50 = 25,0m"
+    }
+  ];
+
+  let idx = 0;
+
+  function loadQ() {
+    const q = data[idx];
+    document.getElementById('title').innerText = q.title;
+    document.getElementById('desc').innerText = q.desc;
+    document.getElementById('fb').style.display = 'none';
+    document.getElementById('btnNext').style.display = 'none';
+
+    const container = document.getElementById('opts');
+    container.innerHTML = '';
+    q.opts.forEach(o => {
+      const b = document.createElement('button');
+      b.innerText = o;
+      b.onclick = () => check(o, q.correct, q.exp);
+      container.appendChild(b);
+    });
+
+    draw(q);
+  }
+
+  function draw(q) {
+    const cv = document.getElementById('trigoCanvas');
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0,0,400,220);
+    ctx.beginPath(); ctx.moveTo(50,180); ctx.lineTo(320,180); ctx.lineTo(320,40); ctx.closePath();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#1e3a8a'; ctx.fillStyle = '#dbeafe'; ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#0f172a'; ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(`${q.angle}°`, 80, 175);
+    ctx.fillText(`Adj: ${q.adj}`, 150, 200);
+    ctx.fillText(`Opp: ${q.opp}`, 325, 110);
+    ctx.fillText(`Hyp: ${q.hyp}`, 160, 100);
+  }
+
+  function check(sel, corr, exp) {
+    const fb = document.getElementById('fb');
+    document.querySelectorAll('#opts button').forEach(b => b.disabled = true);
+    if(sel === corr) {
+      fb.className = 'feedback correct';
+      fb.innerHTML = '✅ Correto!<br>' + exp;
+    } else {
+      fb.className = 'feedback wrong';
+      fb.innerHTML = '❌ Incorreto.<br>' + exp;
+    }
+    fb.style.display = 'block';
+    document.getElementById('btnNext').style.display = 'block';
+  }
+
+  function nextQ() {
+    idx = (idx + 1) % data.length;
+    loadQ();
+  }
+
+  loadQ();
+</script>
+</body>
+</html>
